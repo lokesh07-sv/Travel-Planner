@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold text-blue-600 mb-4">API Key Test</h1>
+            
+            <button 
+                @click="testAPI"
+                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                :disabled="loading"
+            >
+                <span v-if="!loading">Test API Key</span>
+                <span v-else class="flex items-center justify-center gap-2">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Testing...
+                </span>
+            </button>
+
+            <div v-if="result" class="mt-4 p-4 rounded-lg" :class="result.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                <p class="font-bold">{{ result.success ? 'Success!' : 'Error' }}</p>
+                <p>{{ result.message }}</p>
+                <p class="text-sm mt-2">API Key Preview: {{ result.api_key_preview }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    loading: false,
+                    result: null
+                }
+            },
+            methods: {
+                async testAPI() {
+                    this.loading = true
+                    this.result = null
+
+                    try {
+                        const response = await fetch('/test_api')
+                        const data = await response.json()
+                        this.result = data
+                    } catch (error) {
+                        this.result = {
+                            success: false,
+                            message: 'Failed to connect to server',
+                            api_key_preview: 'Error'
+                        }
+                    } finally {
+                        this.loading = false
+                    }
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html> 

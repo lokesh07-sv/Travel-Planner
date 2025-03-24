@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Animated background */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse-light {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+        }
+
+        body {
+            background: linear-gradient(-45deg, #EEF2FF, #E0E7FF, #DBEAFE, #EFF6FF);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Floating circles background decoration */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 6s ease-in-out infinite, pulse-light 4s ease-in-out infinite;
+        }
+
+        body::before {
+            background: radial-gradient(circle, #60A5FA, transparent);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        body::after {
+            background: radial-gradient(circle, #93C5FD, transparent);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -3s;
+        }
+
+        /* Card glass effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Pulse animation for the loading spinner */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Slide in animation */
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Bounce animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Apply animations to elements */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .slide-in {
+            animation: slideIn 0.8s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .bounce {
+            animation: bounce 1s infinite;
+        }
+
+        /* Hover effects */
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+        /* Smooth transitions */
+        .smooth-transition {
+            transition: all 0.3s ease;
+        }
+
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s ease;
+            transform: perspective(1000px) rotateX(0) rotateY(0);
+        }
+        
+        .card-hover:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Input focus animation */
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        
+        .input-focus:focus {
+            transform: scale(1.01);
+        }
+
+        /* Location link styles */
+        .prose a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            color: #2563eb;
+            text-decoration: none;
+            padding-right: 20px;
+        }
+
+        .prose a:hover {
+            color: #1d4ed8;
+        }
+
+        .prose a::after {
+            content: '📍';
+            position: absolute;
+            right: 0;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: transform 0.2s ease;
+        }
+
+        .prose a:hover::after {
+            transform: scale(1.2);
+        }
+
+        /* Improve list styling */
+        .prose ul {
+            margin-left: 1.5rem;
+        }
+
+        .prose li {
+            margin: 0.5rem 0;
+            line-height: 1.6;
+        }
+
+        /* Section headers */
+        .prose h3 {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #1d4ed8;
+            font-size: 1.5rem;
+        }
+
+        /* Day sections and task animations */
+        @keyframes slideInTask {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes checkTask {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes taskHighlight {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        .day-section {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-section:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .time-slot {
+            border-left: 2px solid #93c5fd;
+            padding: 0.8rem 1rem;
+            margin: 0.8rem 0;
+            position: relative;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 0 0.5rem 0.5rem 0;
+            transition: all 0.3s ease;
+            animation: slideInTask 0.5s ease-out forwards;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .time-slot:hover {
+            background: linear-gradient(90deg, 
+                rgba(147, 197, 253, 0.1) 0%,
+                rgba(147, 197, 253, 0.2) 50%,
+                rgba(147, 197, 253, 0.1) 100%);
+            background-size: 200% 100%;
+            animation: taskHighlight 2s linear infinite;
+            transform: translateX(5px);
+        }
+
+        .time-slot::before {
+            content: '🕒';
+            position: absolute;
+            left: -1.5rem;
+            top: 50%;
+            transform: translateY(-50%) scale(0);
+            background: #f8fafc;
+            padding: 0.2rem;
+            border-radius: 50%;
+            animation: checkTask 0.5s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        /* Add animation delays for each time slot */
+        .day-section .time-slot:nth-child(1) { animation-delay: 0.1s; }
+        .day-section .time-slot:nth-child(2) { animation-delay: 0.2s; }
+        .day-section .time-slot:nth-child(3) { animation-delay: 0.3s; }
+        .day-section .time-slot:nth-child(4) { animation-delay: 0.4s; }
+        .day-section .time-slot:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Task completion animation */
+        .time-slot.completed {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .time-slot.completed::before {
+            content: '✅';
+            animation: checkTask 0.5s ease-out forwards;
+        }
+
+        /* Task hover effect */
+        .time-slot:hover::after {
+            content: '📌';
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+            transition: transform 0.3s ease;
+        }
+
+        .time-slot:hover::after {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        /* List items in the travel plan */
+        .travel-plan-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .travel-plan-list li {
+            position: relative;
+            padding: 0.5rem 0 0.5rem 2rem;
+            margin: 0.25rem 0;
+        }
+
+        .travel-plan-list li::before {
+            content: '•';
+            color: #3b82f6;
+            font-weight: bold;
+            position: absolute;
+            left: 0.5rem;
+        }
+
+        /* Sections with icons */
+        .section-with-icon {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        /* Budget section */
+        .budget-section {
+            background: #f0f9ff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .budget-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #93c5fd;
+        }
+
+        /* Tips section */
+        .tips-section {
+            background: #f0fdf4;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .tip-icon {
+            color: #059669;
+            font-size: 1.2rem;
+        }
+
+        /* Additional decorative elements */
+        .floating-icon {
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.7;
+            font-size: 2rem;
+            z-index: -1;
+        }
+
+        .icon-1 { top: 10%; left: 5%; animation-delay: 0s; }
+        .icon-2 { top: 20%; right: 10%; animation-delay: -1s; }
+        .icon-3 { bottom: 15%; left: 15%; animation-delay: -2s; }
+        .icon-4 { bottom: 25%; right: 5%; animation-delay: -3s; }
+
+        /* Shimmer effect for loading states */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0) 0%, 
+                rgba(255,255,255,0.5) 50%, 
+                rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* Button animations */
+        .animated-button {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
+        }
+
+        .animated-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: transform 0.6s, opacity 0.6s;
+        }
+
+        .animated-button:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Loading animation styles */
+        @keyframes moveCloud {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        @keyframes rotatePlane {
+            0% { transform: rotate(0deg) translateY(0); }
+            25% { transform: rotate(-10deg) translateY(-5px); }
+            75% { transform: rotate(10deg) translateY(5px); }
+            100% { transform: rotate(0deg) translateY(0); }
+        }
+
+        @keyframes wavyMotion {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loading-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #93c5fd 0%, #3b82f6 100%);
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+
+        .cloud {
+            position: absolute;
+            font-size: 2rem;
+            animation: moveCloud 15s linear infinite;
+            opacity: 0.8;
+        }
+
+        .cloud:nth-child(2) {
+            top: 40%;
+            animation-delay: -7s;
+            font-size: 1.5rem;
+            opacity: 0.6;
+        }
+
+        .cloud:nth-child(3) {
+            top: 60%;
+            animation-delay: -3s;
+            font-size: 1.8rem;
+            opacity: 0.7;
+        }
+
+        .plane {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            animation: rotatePlane 3s ease-in-out infinite;
+        }
+
+        .loading-text {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            animation: wavyMotion 2s ease-in-out infinite;
+        }
+
+        .loading-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            animation: progressBar 2s linear infinite;
+        }
+
+        @keyframes progressBar {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
+        .loading-icons {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            pointer-events: none;
+        }
+
+        .loading-icon {
+            animation: wavyMotion 2s ease-in-out infinite;
+            opacity: 0.9;
+            font-size: 1.5rem;
+        }
+
+        .loading-icon:nth-child(2) { animation-delay: -0.4s; }
+        .loading-icon:nth-child(3) { animation-delay: -0.8s; }
+        .loading-icon:nth-child(4) { animation-delay: -1.2s; }
+        .loading-icon:nth-child(5) { animation-delay: -1.6s; }
+
+        /* Update existing loading div styles */
+        .loading-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        /* Budget tracking styles */
+        .budget-tracker {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .total-budget {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .budget-progress {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .budget-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .daily-budget {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+
+        .daily-budget:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .expense-category {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .expense-category:last-child {
+            border-bottom: none;
+        }
+
+        .expense-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .expense-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin-top: 0.25rem;
+        }
+
+        .expense-fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes countUp {
+            from { transform: translateY(1rem); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .budget-amount {
+            animation: countUp 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Decorative floating icons -->
+    <div class="floating-icon icon-1">✈️</div>
+    <div class="floating-icon icon-2">🗺️</div>
+    <div class="floating-icon icon-3">🌴</div>
+    <div class="floating-icon icon-4">🎒</div>
+
+    <div id="app" class="container mx-auto px-4 py-8 relative z-10">
+        <header class="text-center mb-12 fade-in">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2 relative">
+                <span class="inline-block bounce">🌍</span> 
+                AI Travel Planner
+                <div class="absolute -top-10 -right-10 w-20 h-20 bg-blue-100 rounded-full opacity-20 animate-pulse"></div>
+                <div class="absolute -bottom-10 -left-10 w-16 h-16 bg-blue-200 rounded-full opacity-20 animate-pulse" style="animation-delay: 1s"></div>
+            </h1>
+            <p class="text-gray-600 relative z-10">Get personalized travel recommendations for your perfect trip</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="glass-card rounded-lg p-6 mb-8 card-hover slide-in">
+                <form @submit.prevent="getRecommendations" class="space-y-4">
+                    <div>
+                        <label for="destination" class="block text-sm font-medium text-gray-700 mb-1">Destination</label>
+                        <input 
+                            id="destination"
+                            type="text" 
+                            v-model="destination" 
+                            placeholder="Enter a destination (e.g., Paris, Tokyo, New York)"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                            :disabled="loading"
+                            required
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="fade-in" style="animation-delay: 0.2s">
+                            <label for="numPeople" class="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
+                            <input 
+                                id="numPeople"
+                                type="number" 
+                                v-model="numPeople" 
+                                min="1"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                                :disabled="loading"
+                                required
+                            >
+                        </div>
+                        <div class="fade-in" style="animation-delay: 0.3s">
+                            <label for="numDays" class="block text-sm font-medium text-gray-700 mb-1">Number of Days</label>
+                            <input 
+                                id="numDays"
+                                type="number" 
+                                v-model="numDays" 
+                                min="1"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                                :disabled="loading"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="fade-in" style="animation-delay: 0.4s">
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                            <input 
+                                id="startDate"
+                                type="date" 
+                                v-model="startDate" 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                                :disabled="loading"
+                                :min="today"
+                                required
+                            >
+                        </div>
+                        <div class="fade-in" style="animation-delay: 0.5s">
+                            <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                            <input 
+                                id="endDate"
+                                type="date" 
+                                v-model="endDate" 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                                :disabled="loading"
+                                :min="startDate"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="fade-in" style="animation-delay: 0.6s">
+                            <label for="totalBudget" class="block text-sm font-medium text-gray-700 mb-1">Total Budget ($)</label>
+                            <input 
+                                id="totalBudget"
+                                type="number" 
+                                v-model="manualBudget" 
+                                placeholder="Enter your total budget"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                                :disabled="loading"
+                                min="0"
+                                step="100"
+                            >
+                        </div>
+                        <div class="fade-in" style="animation-delay: 0.6s">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Budget Mode</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" v-model="budgetMode" value="auto" class="form-radio text-blue-600">
+                                    <span class="ml-2">Auto</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" v-model="budgetMode" value="manual" class="form-radio text-blue-600">
+                                    <span class="ml-2">Manual</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fade-in" style="animation-delay: 0.7s">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Trip Description (Optional)</label>
+                        <textarea 
+                            id="description"
+                            v-model="description" 
+                            placeholder="Add any specific requirements or preferences (e.g., adventure activities, relaxing vacation, family-friendly, budget constraints)"
+                            rows="3"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 input-focus smooth-transition"
+                            :disabled="loading"
+                        ></textarea>
+                    </div>
+
+                    <button 
+                        type="submit"
+                        class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 hover-scale smooth-transition animated-button"
+                        :disabled="loading || !destination.trim()"
+                    >
+                        <span v-if="!loading">Generate Travel Plan</span>
+                        <span v-else class="flex items-center justify-center gap-2">
+                            <i class="fas fa-spinner fa-spin pulse"></i>
+                            <span class="shimmer">Generating your travel plan...</span>
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <div v-if="error" class="glass-card border-l-4 border-red-500 text-red-700 p-4 mb-8 slide-in" role="alert">
+                <p class="font-bold">Error</p>
+                <p>{{ error }}</p>
+                <p class="mt-2 text-sm">Please try again. If the problem persists, try a different destination or refresh the page.</p>
+            </div>
+
+            <div v-if="loading" class="glass-card rounded-lg overflow-hidden mb-8 fade-in loading-card">
+                <div class="loading-container">
+                    <div class="cloud">☁️</div>
+                    <div class="cloud">☁️</div>
+                    <div class="cloud">☁️</div>
+                    <div class="plane">✈️</div>
+                    <div class="loading-icons">
+                        <span class="loading-icon">🌍</span>
+                        <span class="loading-icon">🗺️</span>
+                        <span class="loading-icon">🎒</span>
+                        <span class="loading-icon">🏖️</span>
+                        <span class="loading-icon">🗽</span>
+                    </div>
+                    <div class="loading-text">
+                        <span class="shimmer">Creating your perfect travel plan...</span>
+                    </div>
+                    <div class="loading-progress"></div>
+                </div>
+                <div class="p-4 text-center">
+                    <p class="text-gray-600 font-medium">Please wait while we craft your personalized itinerary</p>
+                    <p class="text-sm text-gray-500 mt-2">Time elapsed: {{ elapsedTime }} seconds</p>
+                </div>
+            </div>
+
+            <div v-if="recommendations && !loading" class="space-y-8 fade-in">
+                <div class="glass-card rounded-lg p-6 card-hover">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Your Travel Plan</h2>
+                        <button 
+                            @click="downloadPlan" 
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center hover-scale smooth-transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Download Plan
+                        </button>
+                    </div>
+                    <div class="prose max-w-none" v-html="formattedRecommendations"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    destination: '',
+                    numPeople: 1,
+                    numDays: 3,
+                    startDate: '',
+                    endDate: '',
+                    description: '',
+                    recommendations: '',
+                    loading: false,
+                    error: null,
+                    retryCount: 0,
+                    maxRetries: 3,
+                    retryDelay: 1000,
+                    elapsedTime: 0,
+                    timerInterval: null,
+                    manualBudget: '',
+                    budgetMode: 'auto'
+                }
+            },
+            computed: {
+                today() {
+                    return new Date().toISOString().split('T')[0]
+                },
+                formattedRecommendations() {
+                    if (!this.recommendations) return '';
+                    
+                    let formatted = this.recommendations
+                        .split('\n')
+                        .map((line, index) => {
+                            // Format day headers with budget tracking
+                            if (line.match(/Day \d+/i)) {
+                                const dayNum = line.match(/\d+/)[0];
+                                const dayBudget = this.getDailyBudget(dayNum);
+                                return `
+                                    </div>
+                                    <div class="day-section" data-day="${dayNum}">
+                                        <div class="flex justify-between items-center">
+                                            <h3 class="text-xl font-bold">${line}</h3>
+                                            <div class="text-blue-600 font-semibold budget-amount">
+                                                Daily Budget: $${dayBudget}
+                                            </div>
+                                        </div>
+                                        <div class="daily-budget mt-4">
+                                            <div class="expense-category">
+                                                <div class="flex items-center">
+                                                    <span class="expense-icon">🍽️</span>
+                                                    <span>Food & Dining</span>
+                                                </div>
+                                                <span>$${Math.round(dayBudget * 0.3)}</span>
+                                            </div>
+                                            <div class="expense-category">
+                                                <div class="flex items-center">
+                                                    <span class="expense-icon">🏨</span>
+                                                    <span>Accommodation</span>
+                                                </div>
+                                                <span>$${Math.round(dayBudget * 0.4)}</span>
+                                            </div>
+                                            <div class="expense-category">
+                                                <div class="flex items-center">
+                                                    <span class="expense-icon">🎫</span>
+                                                    <span>Activities</span>
+                                                </div>
+                                                <span>$${Math.round(dayBudget * 0.2)}</span>
+                                            </div>
+                                            <div class="expense-category">
+                                                <div class="flex items-center">
+                                                    <span class="expense-icon">🚗</span>
+                                                    <span>Transportation</span>
+                                                </div>
+                                                <span>$${Math.round(dayBudget * 0.1)}</span>
+                                            </div>
+                                        </div>`;
+                            }
+                            
+                            // Format time-based activities with click handler
+                            if (line.match(/^\d{1,2}:\d{2}/)) {
+                                return `<div class="time-slot" @click="toggleTaskComplete($event)" data-index="${index}">${line}</div>`;
+                            }
+                            
+                            // Format section headers (numbered items)
+                            if (line.match(/^\d+\./)) {
+                                const icon = this.getSectionIcon(line);
+                                return `</div><div class="section-with-icon"><div class="section-icon">${icon}</div><div><h3 class="text-xl font-bold text-blue-700">${line}</h3>`;
+                            }
+                            
+                            // Format bullet points
+                            if (line.trim().startsWith('•')) {
+                                return `<li>${line.trim().substring(1)}</li>`;
+                            }
+                            
+                            // Format regular paragraphs
+                            return `<p class="my-2">${line}</p>`;
+                        })
+                        .join('\n');
+                    
+                    // Wrap lists in ul tags with custom class
+                    formatted = formatted.replace(/<li>.*?<\/li>/g, match => {
+                        return `<ul class="travel-plan-list">${match}</ul>`;
+                    });
+                    
+                    // Add special styling for budget section
+                    formatted = formatted.replace(
+                        /(Budget estimate:.*?)(?=<\/div>|$)/s,
+                        '<div class="budget-section">$1</div>'
+                    );
+                    
+                    // Add special styling for tips section
+                    formatted = formatted.replace(
+                        /(Cultural tips:.*?)(?=<\/div>|$)/s,
+                        '<div class="tips-section">$1</div>'
+                    );
+                    
+                    // Clean up any double-wrapped divs
+                    formatted = formatted.replace(/<\/div><div class="day-section">/, '<div class="day-section">');
+                    
+                    // Add total budget section at the top
+                    const totalBudget = this.getTotalBudget();
+                    const budgetSummary = `
+                        <div class="budget-tracker">
+                            <div class="budget-header">
+                                <h3 class="text-xl font-bold text-blue-800">Total Budget Breakdown</h3>
+                                <div class="total-budget">$${totalBudget}</div>
+                            </div>
+                            <div class="budget-progress">
+                                <div class="budget-progress-bar" style="width: 100%"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="text-center">
+                                    <div class="text-gray-600">Daily Average</div>
+                                    <div class="text-lg font-semibold">$${Math.round(totalBudget / this.numDays)}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-600">Per Person</div>
+                                    <div class="text-lg font-semibold">$${Math.round(totalBudget / this.numPeople)}</div>
+                                </div>
+                            </div>
+                        </div>`;
+
+                    formatted = budgetSummary + formatted;
+                    
+                    return formatted;
+                }
+            },
+            watch: {
+                startDate(newDate) {
+                    // If end date is before start date, update it
+                    if (this.endDate && this.endDate < newDate) {
+                        this.endDate = newDate;
+                    }
+                    // Update number of days based on date selection
+                    this.updateNumDays();
+                },
+                endDate() {
+                    // Update number of days based on date selection
+                    this.updateNumDays();
+                },
+                budgetMode(newMode) {
+                    this.updateBudgetDistribution();
+                },
+                manualBudget() {
+                    if (this.budgetMode === 'manual') {
+                        this.updateBudgetDistribution();
+                    }
+                }
+            },
+            methods: {
+                sleep(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                },
+                async retryWithDelay(fn, retries = 3, delay = 1000) {
+                    for (let i = 0; i < retries; i++) {
+                        try {
+                            return await fn();
+                        } catch (error) {
+                            if (i === retries - 1) throw error;
+                            console.log(`Attempt ${i + 1} failed, retrying in ${delay}ms...`);
+                            await this.sleep(delay);
+                            delay *= 2; // Exponential backoff
+                        }
+                    }
+                },
+                updateNumDays() {
+                    if (this.startDate && this.endDate) {
+                        const start = new Date(this.startDate);
+                        const end = new Date(this.endDate);
+                        const diffTime = Math.abs(end - start);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        this.numDays = diffDays;
+                    }
+                },
+                startTimer() {
+                    this.elapsedTime = 0;
+                    this.timerInterval = setInterval(() => {
+                        this.elapsedTime++;
+                    }, 1000);
+                },
+                stopTimer() {
+                    if (this.timerInterval) {
+                        clearInterval(this.timerInterval);
+                        this.timerInterval = null;
+                    }
+                },
+                async getRecommendations() {
+                    if (!this.destination.trim() || this.loading) return;
+
+                    this.loading = true;
+                    this.error = null;
+                    this.recommendations = '';
+                    this.startTimer();
+
+                    try {
+                        await this.retryWithDelay(async () => {
+                            console.log('Sending request for:', this.destination);
+                            const response = await fetch('/get_recommendations', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    destination: this.destination.trim(),
+                                    numPeople: parseInt(this.numPeople),
+                                    numDays: parseInt(this.numDays),
+                                    startDate: this.startDate,
+                                    endDate: this.endDate,
+                                    description: this.description.trim()
+                                })
+                            });
+
+                            if (!response.ok) {
+                                const data = await response.json();
+                                throw new Error(data.error || 'Server error');
+                            }
+
+                            const data = await response.json();
+                            if (!data.recommendations) {
+                                throw new Error('No recommendations received');
+                            }
+
+                            this.recommendations = data.recommendations;
+                        }, this.maxRetries, this.retryDelay);
+
+                    } catch (err) {
+                        console.error('Error:', err);
+                        this.error = `${err.message}. Please try again or refresh the page.`;
+                    } finally {
+                        this.stopTimer();
+                        this.loading = false;
+                    }
+                },
+                async downloadPlan() {
+                    try {
+                        const totalBudget = this.getTotalBudget();
+                        const budgetInfo = {
+                            totalBudget: totalBudget,
+                            dailyAverage: Math.round(totalBudget / this.numDays),
+                            perPerson: Math.round(totalBudget / this.numPeople)
+                        };
+
+                        const response = await fetch('/download_plan', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                content: this.recommendations,
+                                destination: this.destination,
+                                budgetInfo: budgetInfo
+                            })
+                        });
+
+                        if (!response.ok) throw new Error('Failed to download plan');
+
+                        // Get the filename from the Content-Disposition header if available
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        let filename = `${this.destination.replace(/[^a-zA-Z0-9]/g, '_')}_travel_plan.txt`;
+                        if (contentDisposition) {
+                            const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                            if (filenameMatch) filename = filenameMatch[1];
+                        }
+
+                        // Create blob from response text
+                        const text = await response.text();
+                        const blob = new Blob([text], { type: 'text/plain' });
+                        
+                        // Create download link
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = filename;
+                        
+                        // Trigger download
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        // Cleanup
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+
+                        // Show success message
+                        this.showDownloadSuccess();
+                    } catch (err) {
+                        console.error('Download error:', err);
+                        this.error = `Download failed: ${err.message}`;
+                    }
+                },
+                showDownloadSuccess() {
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out z-50';
+                    toast.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Travel plan downloaded successfully!</span>
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    
+                    // Animate in
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(0)';
+                        toast.style.opacity = '1';
+                    }, 100);
+
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(100%)';
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(toast);
+                        }, 500);
+                    }, 3000);
+                },
+                getSectionIcon(line) {
+                    const icons = {
+                        'itinerary': '📅',
+                        'attractions': '🎯',
+                        'stay': '🏨',
+                        'visit': '🗓️',
+                        'food': '🍴',
+                        'cultural': '🎭',
+                        'around': '🚗',
+                        'budget': '💰'
+                    };
+                    
+                    const text = line.toLowerCase();
+                    for (const [key, icon] of Object.entries(icons)) {
+                        if (text.includes(key)) return icon;
+                    }
+                    return '📍';
+                },
+                toggleTaskComplete(event) {
+                    const timeSlot = event.currentTarget;
+                    timeSlot.classList.toggle('completed');
+                    
+                    // Add confetti effect when task is completed
+                    if (timeSlot.classList.contains('completed')) {
+                        this.createConfetti(event.clientX, event.clientY);
+                    }
+                },
+                createConfetti(x, y) {
+                    const colors = ['#3b82f6', '#10b981', '#93c5fd', '#60a5fa'];
+                    for (let i = 0; i < 30; i++) {
+                        const confetti = document.createElement('div');
+                        confetti.style.cssText = `
+                            position: fixed;
+                            left: ${x}px;
+                            top: ${y}px;
+                            width: 10px;
+                            height: 10px;
+                            background: ${colors[Math.floor(Math.random() * colors.length)]};
+                            pointer-events: none;
+                            border-radius: 50%;
+                            z-index: 1000;
+                        `;
+                        document.body.appendChild(confetti);
+
+                        const angle = Math.random() * Math.PI * 2;
+                        const velocity = 5 + Math.random() * 5;
+                        const tx = x + Math.cos(angle) * 100;
+                        const ty = y + Math.sin(angle) * 100;
+
+                        confetti.animate([
+                            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                            { transform: `translate(${tx - x}px, ${ty - y}px) scale(0)`, opacity: 0 }
+                        ], {
+                            duration: 1000,
+                            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                        }).onfinish = () => confetti.remove();
+                    }
+                },
+                getTotalBudget() {
+                    if (this.budgetMode === 'manual' && this.manualBudget) {
+                        return parseFloat(this.manualBudget);
+                    }
+
+                    // Auto calculation mode
+                    const destinationLower = this.destination.toLowerCase();
+                    let baseDaily;
+                    
+                    if (destinationLower.includes('tokyo') || destinationLower.includes('paris') || 
+                        destinationLower.includes('new york') || destinationLower.includes('london')) {
+                        baseDaily = 300; // Expensive cities
+                    } else if (destinationLower.includes('bangkok') || destinationLower.includes('mexico') ||
+                             destinationLower.includes('bali') || destinationLower.includes('prague')) {
+                        baseDaily = 100; // Budget-friendly cities
+                    } else {
+                        baseDaily = 200; // Medium-cost cities
+                    }
+
+                    // Adjust for number of people
+                    const totalBudget = baseDaily * this.numDays * this.numPeople;
+                    
+                    // Round to nearest 100
+                    return Math.round(totalBudget / 100) * 100;
+                },
+                getDailyBudget(dayNum) {
+                    const totalBudget = this.getTotalBudget();
+                    const dailyBase = Math.round(totalBudget / this.numDays);
+                    
+                    if (this.budgetMode === 'manual') {
+                        // In manual mode, distribute budget evenly
+                        return dailyBase;
+                    }
+                    
+                    // In auto mode, add variations
+                    const variation = Math.sin(dayNum * 0.5) * 20;
+                    return Math.round(dailyBase + variation);
+                },
+                updateBudgetDistribution() {
+                    if (this.recommendations) {
+                        // Force a refresh of the recommendations display
+                        const temp = this.recommendations;
+                        this.recommendations = '';
+                        this.$nextTick(() => {
+                            this.recommendations = temp;
+                        });
+                    }
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html> 

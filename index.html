@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <style>
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div id="app" class="max-w-4xl w-full">
+        <div class="glass-card p-8 text-white">
+            <h1 class="text-4xl font-bold mb-6 text-center">AI Travel Planner</h1>
+            <p class="text-lg mb-8 text-center">
+                Welcome to AI Travel Planner! This application helps you create personalized travel itineraries using Google's Gemini AI.
+            </p>
+            <div class="space-y-6">
+                <h2 class="text-2xl font-semibold mb-4">Features:</h2>
+                <ul class="list-none space-y-3">
+                    <li class="flex items-center">
+                        <span class="mr-2">🌍</span> Personalized travel recommendations
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">📅</span> Day-by-day itinerary planning
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">💰</span> Smart budget calculation and tracking
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">🏨</span> Accommodation suggestions
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">🍴</span> Local food recommendations
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">🎯</span> Must-see attractions with Google Maps integration
+                    </li>
+                    <li class="flex items-center">
+                        <span class="mr-2">📥</span> Downloadable travel plans
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-8 text-center">
+                <p class="mb-4">
+                    To get started with the AI Travel Planner, please follow the setup instructions in our
+                    <a href="https://github.com/lindesh/Travel_planner" class="text-blue-200 hover:text-blue-100 underline">GitHub repository</a>.
+                </p>
+                <p class="text-sm opacity-75">
+                    Note: This is a self-hosted application. You'll need to set up your own instance with your Gemini API key.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
